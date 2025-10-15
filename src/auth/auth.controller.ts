@@ -1,34 +1,66 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+  Headers,
+  Get,
+  Req,
+  UseGuards
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-
-@Controller('auth')
+import { LoginDto } from './dto/login.dto';
+import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
+@Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post("login")
+  async login(@Body() body: LoginDto) {
+    try {
+      return await this.authService.login(body.email, body.password);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: "No se ha podido iniciar sesión",
+        },
+        HttpStatus.FORBIDDEN,
+        {
+          cause: error,
+        }
+      );
+    }
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('logout')
+  async logout(@Headers('authorization') authHeader: string) {
+    try {
+      if (!authHeader) {
+        throw new HttpException('Falta el token de autorización', HttpStatus.UNAUTHORIZED);
+      }
+
+      const token = authHeader.replace('Bearer ', '').trim();
+
+      return await this.authService.logout(token);
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: error.message || 'Error al cerrar sesión',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Get('profile')
+  @UseGuards(SupabaseAuthGuard)
+  getProfile(@Req() req) {
+    return {
+      message: 'Ruta protegida: usuario autenticado',
+      user: req.user,
+    };
   }
 }
