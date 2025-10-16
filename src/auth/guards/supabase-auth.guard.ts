@@ -28,15 +28,16 @@ export class SupabaseAuthGuard implements CanActivate {
 
     const token = authHeader.replace('Bearer ', '').trim();
 
-    // Verificamos el token con Supabase
+
     const { data, error } = await this.supabase.auth.getUser(token);
 
     if (error || !data?.user) {
       throw new UnauthorizedException('Token inválido o expirado');
     }
 
-    // Guardamos el usuario en la request (útil para los controladores)
+   
     request.user = data.user;
+    request.token = token; 
 
     return true;
   }
