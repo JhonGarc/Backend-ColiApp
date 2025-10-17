@@ -21,7 +21,6 @@ export const createSupabaseClient = (
     });
   }
 
-  // Si no hay accessToken → usa cliente global compartido
   if (!supabaseClient) {
     supabaseClient = createClient(supabaseUrl, supabaseKey);
   }
@@ -30,8 +29,8 @@ export const createSupabaseClient = (
 };
 
 export const createSupabaseAdminClient = (configService: ConfigService) => {
-  const supabaseUrl = configService.get<string>('SUPABASE_URL')!;
-  const supabaseServiceKey = configService.get<string>('SUPABASE_SERVICE_KEY')!;
+  const supabaseUrl = configService.get<string>('supabase.url')!;
+  const supabaseServiceKey = configService.get<string>('supabase.serviceKey')!;
 
   if (!supabaseAdminClient) {
     supabaseAdminClient = createClient(supabaseUrl, supabaseServiceKey, {
