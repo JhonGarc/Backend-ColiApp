@@ -4,7 +4,6 @@ import {
   Body,
   HttpException,
   HttpStatus,
-  Headers,
   Get,
   Req,
   UseGuards
